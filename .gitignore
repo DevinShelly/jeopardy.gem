@@ -1,0 +1,5 @@
+lib/jeopardy
+lib/jeopardy/*
+*.gem
+tmp
+tmp/*
