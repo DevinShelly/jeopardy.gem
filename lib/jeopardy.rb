@@ -33,6 +33,25 @@ module Jeopardy
     end
     
     ##
+    # Simulates a Jeopardy::Game with an options hash containing the following keys:
+    #
+    # [:trials] The number of times the Monte Carlo sim will be run (default: 1)
+    # [:seed] The seed which is fed to the random number generators, or nil for a time based seed (default: nil)
+    #
+    # Returns a hash with Jeopardy::Game#players as keys and their respective wins
+    # as values.
+    #
+    # *Usage*
+    #
+    # [<tt>Jeopardy::Game.new.simulate(seed: 0)</tt>] #=>	<tt>{ Jeopardy::Game.players[0] => 0, Jeopardy::Game.players[1] => 0, Jeopardy::Game.players[2] => 1 }</tt>
+    # [<tt>Jeopardy::Game.new.simulate(seed: 0, trials: 1000)</tt>] #=>	<tt>{ Jeopardy::Game.players[0] => 338, Jeopardy::Game.players[1] => 343,	Jeopardy::Game.players[2] => 319 }</tt>
+    
+    def simulate(options = {})
+      #empty, just used a placeholder for documentation
+      #actual implementation is in jeopardy.c
+    end
+    
+    ##
     # Resets the games scores to the values found in the given array. Returns self so that a simulate call may be chained
     #
     # [:scores] Three scores corresponding to the new score for each player (default: [0, 0, 0])
@@ -156,6 +175,32 @@ module Jeopardy
       @knowledge_rating = options[:knowledge_rating].to_f
       @dd_fj_rating = options[:dd_fj_rating].to_f
       @confidence_rating = options[:confidence_rating].to_f
+    end
+    
+    ##
+    # Returns the decimal odds of the Player answering a Daily Double correctly.
+    #
+    # *Usage*
+    #
+    # [<tt>Jeopardy::Player.new.odds_of_answering_daily_double(Jeopardy::Clue.new)</tt>] #=>	0.76
+    #
+    
+    def odds_of_answering_daily_double(daily_double)
+      #empty, just used a placeholder for documentation
+      #actual implementation is in jeopardy.c
+    end 
+
+    ##
+    # Return the decimal odds of the Player answering an ordinary clue correctly.
+    #
+    # *Usage*
+    #
+    # [<tt>Jeopardy::Player.new.odds_of_answering_clue(Jeopardy::Clue.new)</tt>] #=>	0.9316826244
+    #
+    
+    def odds_of_answering_clue(clue)
+      #empty, just used a placeholder for documentation
+      #actual implementation is in jeopardy.c
     end
   end
 

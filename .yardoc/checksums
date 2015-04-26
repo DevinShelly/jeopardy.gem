@@ -1,0 +1,5 @@
+lib/jeopardy.rb 9841ed81aec426739309d31e073250780952070e
+ext/jeopardy/Clue.c 575b0d467dfc07ef48beb562ad232bbc17833ae2
+ext/jeopardy/Game.c e36d5addb86556eedad032bd1ea540cd74895843
+ext/jeopardy/Player.c 49231271a959592c22bafffdae8940f045aaf4de
+ext/jeopardy/jeopardy.c 1c9f3c951b9b600cba5b0e832c58ef4926d22603

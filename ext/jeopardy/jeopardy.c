@@ -188,21 +188,6 @@ static void rb_hash_set_if_nil(VALUE hash, VALUE key, VALUE val)
 	}
 }
 
-/*
-	*	Simulates a Jeopardy::Game with an options hash containing the following keys:
-	*
-	*	[:trials]	The number of times the Monte Carlo sim will be run (default: 1)
-	* [:seed]	The seed which is fed to the random number generators, or nil for a time based seed (default: nil)
-	*
-	*	Returns a hash with Jeopardy::Game#players as keys and their respective wins
-	*	as values.
-	*
-	* *Usage*
-	*
-	*	[<tt>Jeopardy::Game.new.simulate(seed: 0)</tt>]	#=>	<tt>{ Jeopardy::Game.players[0] => 0, Jeopardy::Game.players[1] => 0, Jeopardy::Game.players[2] => 1 }</tt>
-	*	[<tt>Jeopardy::Game.new.simulate(seed: 0, trials: 1000)</tt>]	#=>	<tt>{ Jeopardy::Game.players[0] => 338, Jeopardy::Game.players[1] => 343,	Jeopardy::Game.players[2] => 319 }</tt>
-	*/
-
 static VALUE simulate(int argc, VALUE *argv, VALUE self)
 {
 	VALUE options;
@@ -248,14 +233,6 @@ static VALUE simulate(int argc, VALUE *argv, VALUE self)
 	return wins_hash;
 }
 
-/*
-	*	Returns the decimal odds of the Player answering a Daily Double correctly.
-	*
-	* *Usage*
-	*
-	*	[<tt>Jeopardy::Player.new.odds_of_answering_daily_double(Jeopardy::Clue.new)</tt>]	#=>	0.76
-	*/
-
 static VALUE odds_of_answering_daily_double(VALUE self, VALUE rb_clue)
 {
 	Player player = c_player(self);
@@ -263,14 +240,6 @@ static VALUE odds_of_answering_daily_double(VALUE self, VALUE rb_clue)
 	clue.isDailyDouble = 1;
 	return DBL2NUM(oddsPlayerAnsweredDailyDouble(&player, &clue));
 }
-
-/* 
-	* Return the decimal odds of the Player answering an ordinary clue correctly.
-	*
-	* *Usage*
-	*
-	* [<tt>Jeopardy::Player.new.odds_of_answering_clue(Jeopardy::Clue.new)</tt>]	#=>	0.9316826244
-  */
 
 static VALUE odds_of_answering_clue(VALUE self, VALUE rb_clue)
 {

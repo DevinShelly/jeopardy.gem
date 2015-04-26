@@ -5,3 +5,5 @@ tmp
 tmp/*
 doc
 doc/*
+.yarddoc
+.yarddoc/*
