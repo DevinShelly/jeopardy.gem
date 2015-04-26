@@ -7,6 +7,23 @@ VALUE rbGame;
 VALUE rbClue;
 VALUE rbPlayer;
 
+static Clue c_clue(VALUE rb_clue)
+{
+	if (rb_obj_is_kind_of(rb_clue, rbClue) == Qfalse)
+	{
+		rb_raise(rb_eTypeError, "Tried to convert a non-Clue Ruby object to a Clue struct.");
+	}
+	Clue clue;
+	clue.value = NUM2INT(rb_funcall(rb_clue, rb_intern("value"), 0));
+	clue.round = NUM2INT(rb_funcall(rb_clue, rb_intern("round"), 0));
+	clue.row = NUM2INT(rb_funcall(rb_clue, rb_intern("row"), 0));
+	clue.column = NUM2INT(rb_funcall(rb_clue, rb_intern("column"), 0));
+	clue.value = NUM2INT(rb_funcall(rb_clue, rb_intern("value"), 0));
+	clue.isDailyDouble = 0;
+	clueReset(&clue);
+	return clue;
+}
+
 static Clue *c_clues(VALUE rb_clues)
 {
 	Check_Type(rb_clues, T_ARRAY);
@@ -15,20 +32,26 @@ static Clue *c_clues(VALUE rb_clues)
 	{
 		VALUE iV = INT2NUM(i);
 		VALUE rb_clue = rb_ary_aref(1, &iV, rb_clues);
-		if (rb_obj_is_kind_of(rb_clue, rbClue) == Qfalse)
-		{
-			rb_raise(rb_eTypeError, "Clues array can only contain Clues.");
-		}
-		clues[i].value = NUM2INT(rb_funcall(rb_clue, rb_intern("value"), 0));
-		clues[i].round = NUM2INT(rb_funcall(rb_clue, rb_intern("round"), 0));
-		clues[i].row = NUM2INT(rb_funcall(rb_clue, rb_intern("row"), 0));
-		clues[i].column = NUM2INT(rb_funcall(rb_clue, rb_intern("column"), 0));
-		clues[i].value = NUM2INT(rb_funcall(rb_clue, rb_intern("value"), 0));
-		clues[i].isDailyDouble = 0;
-		clueReset(&clues[i]);
+		clues[i] = c_clue(rb_clue);
 	}
 	
 	return clues;
+}
+
+static Player c_player(VALUE rb_player)
+{
+	if (rb_obj_is_kind_of(rb_player, rbPlayer) == Qfalse)
+	{
+		rb_raise(rb_eTypeError, "Tried to convert a non-Player Ruby object to a Player struct.");
+	}
+	
+	Player player;
+	player.score = NUM2INT(rb_funcall(rb_player, rb_intern("score"), 0));
+	player.buzzerRating = NUM2INT(rb_funcall(rb_player, rb_intern("buzzer_rating"), 0));
+	player.confidenceRating = NUM2INT(rb_funcall(rb_player, rb_intern("confidence_rating"), 0));
+	player.knowledgeRating = NUM2INT(rb_funcall(rb_player, rb_intern("knowledge_rating"), 0));
+	player.ddFJRating = NUM2INT(rb_funcall(rb_player, rb_intern("dd_fj_rating"), 0));
+	return player;
 }
 
 static Player *c_players(VALUE rb_players)
@@ -44,15 +67,7 @@ static Player *c_players(VALUE rb_players)
 	{
 		VALUE iV = INT2NUM(i);
 		VALUE rb_player = rb_ary_aref(1, &iV, rb_players);
-		if (rb_obj_is_kind_of(rb_player, rbPlayer) == Qfalse)
-		{
-			rb_raise(rb_eTypeError, "Players array can only contain Players.");
-		}
-		players[i].score = NUM2INT(rb_funcall(rb_player, rb_intern("score"), 0));
-		players[i].buzzerRating = NUM2INT(rb_funcall(rb_player, rb_intern("buzzer_rating"), 0));
-		players[i].confidenceRating = NUM2INT(rb_funcall(rb_player, rb_intern("confidence_rating"), 0));
-		players[i].knowledgeRating = NUM2INT(rb_funcall(rb_player, rb_intern("knowledge_rating"), 0));
-		players[i].ddFJRating = NUM2INT(rb_funcall(rb_player, rb_intern("dd_fj_rating"), 0));
+		players[i] = c_player(rb_player);
 	}
 	
 	return players; 
@@ -165,22 +180,6 @@ static void sync_game(VALUE rb_game, Game c_game)
 	}
 }
 
-
-/*
-	*	Simulates a Jeopardy::Game with an options hash containing the following keys:
-	*
-	*	trials: The number of times the Monte Carlo sim will be run (default: 1)
-	* seed: The seed which is fed to the random number generators, or nil for a time based seed (default: nil)
-	*
-	*	Returns a hash with Jeopardy::Game#players as keys and their respective wins
-	*	as values.
-	*
-	* Simulation is non-deterministic, so these are only likely outcomes:
-	*
-	*	Jeopardy::Game.new.simulate(seed: 0)		#~>	{ Jeopardy::Game.players[0] => 0, Jeopardy::Game.players[1] => 0, Jeopardy::Game.players[2] => 1 }
-	*	Jeopardy::Game.new.simulate(seed: 0, trials: 1000)	#~>	{ Jeopardy::Game.players[0] => 338, Jeopardy::Game.players[1] => 343,	Jeopardy::Game.players[2] => 319 }
-	*/
-
 static void rb_hash_set_if_nil(VALUE hash, VALUE key, VALUE val)
 {
 	if (rb_hash_aref(hash, key) == Qnil)
@@ -188,6 +187,21 @@ static void rb_hash_set_if_nil(VALUE hash, VALUE key, VALUE val)
 		rb_hash_aset(hash, key, val);
 	}
 }
+
+/*
+	*	Simulates a Jeopardy::Game with an options hash containing the following keys:
+	*
+	*	[:trials]	The number of times the Monte Carlo sim will be run (default: 1)
+	* [:seed]	The seed which is fed to the random number generators, or nil for a time based seed (default: nil)
+	*
+	*	Returns a hash with Jeopardy::Game#players as keys and their respective wins
+	*	as values.
+	*
+	* *Usage*
+	*
+	*	[<tt>Jeopardy::Game.new.simulate(seed: 0)</tt>]	#=>	<tt>{ Jeopardy::Game.players[0] => 0, Jeopardy::Game.players[1] => 0, Jeopardy::Game.players[2] => 1 }</tt>
+	*	[<tt>Jeopardy::Game.new.simulate(seed: 0, trials: 1000)</tt>]	#=>	<tt>{ Jeopardy::Game.players[0] => 338, Jeopardy::Game.players[1] => 343,	Jeopardy::Game.players[2] => 319 }</tt>
+	*/
 
 static VALUE simulate(int argc, VALUE *argv, VALUE self)
 {
@@ -234,16 +248,51 @@ static VALUE simulate(int argc, VALUE *argv, VALUE self)
 	return wins_hash;
 }
 
+/*
+	*	Returns the decimal odds of the Player answering a Daily Double correctly.
+	*
+	* *Usage*
+	*
+	*	[<tt>Jeopardy::Player.new.odds_of_answering_daily_double(Jeopardy::Clue.new)</tt>]	#=>	0.76
+	*/
+
+static VALUE odds_of_answering_daily_double(VALUE self, VALUE rb_clue)
+{
+	Player player = c_player(self);
+	Clue clue = c_clue(rb_clue);
+	clue.isDailyDouble = 1;
+	return DBL2NUM(oddsPlayerAnsweredDailyDouble(&player, &clue));
+}
+
+/* 
+	* Return the decimal odds of the Player answering an ordinary clue correctly.
+	*
+	* *Usage*
+	*
+	* [<tt>Jeopardy::Player.new.odds_of_answering_clue(Jeopardy::Clue.new)</tt>]	#=>	0.9316826244
+  */
+
+static VALUE odds_of_answering_clue(VALUE self, VALUE rb_clue)
+{
+	Player player = c_player(self);
+	Clue clue = c_clue(rb_clue);
+	return DBL2NUM(oddsPlayerAnsweredClue(&player, &clue));
+}
+
 void Init_jeopardy()	
 {
 		
 #if RDOC_CAN_PARSE_DOCUMENTATION
     Jeopardy = rb_define_module("Jeopardy");
 		rbGame = rb_define_class_under(Jeopardy, "Game", rb_cObject);
+		rbPlayer = rb_define_class_under(Jeopardy, "Player", rb_cObject);
+		rbClue = rb_define_class_under(Jeopardy, "Clue", rb_cObject);
 #endif
 	Jeopardy = rb_const_get(rb_cObject, rb_intern("Jeopardy"));
 	rbGame = rb_const_get(Jeopardy, rb_intern("Game"));
 	rbClue = rb_const_get(Jeopardy, rb_intern("Clue"));
 	rbPlayer = rb_const_get(Jeopardy, rb_intern("Player"));
 	rb_define_method(rbGame, "simulate", simulate, -1);
+	rb_define_method(rbPlayer, "odds_of_answering_daily_double", odds_of_answering_daily_double, 1);
+	rb_define_method(rbPlayer, "odds_of_answering_clue", odds_of_answering_clue, 1);
 }

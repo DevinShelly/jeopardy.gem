@@ -3,3 +3,5 @@ lib/jeopardy/*
 *.gem
 tmp
 tmp/*
+doc
+doc/*
