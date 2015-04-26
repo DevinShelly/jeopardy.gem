@@ -10,23 +10,22 @@
 Game gameMake(Player *players, int numJeopardyClues, Clue *jeopardyClues, int numDoubleJeopardyClues, Clue *doubleJeopardyClues, Clue finalJeopardyClue, int playerInControlIndex)
 {
 	Game game;
-    memcpy(game.players, players, sizeof(game.players));
+	memcpy(game.players, players, sizeof(game.players));
 	game.numJeopardyClues = numJeopardyClues;
-    game.jeopardyClues = malloc(sizeof(Clue)*numJeopardyClues);
-    memcpy(game.jeopardyClues, jeopardyClues, sizeof(Clue)*numJeopardyClues);
+	game.jeopardyClues = malloc(sizeof(Clue)*numJeopardyClues);
+	memcpy(game.jeopardyClues, jeopardyClues, sizeof(Clue)*numJeopardyClues);
 	game.doubleJeopardyClues = malloc(sizeof(Clue)*numDoubleJeopardyClues);
-    memcpy(game.doubleJeopardyClues, doubleJeopardyClues, sizeof(Clue)*numDoubleJeopardyClues);
+	memcpy(game.doubleJeopardyClues, doubleJeopardyClues, sizeof(Clue)*numDoubleJeopardyClues);
 	game.numDoubleJeopardyClues = numDoubleJeopardyClues;
 	game.finalJeopardyClue = finalJeopardyClue;
 	game.playerInControlIndex = playerInControlIndex;
 	return game;
 }
 
-void gameFree(Game *game)
+void gameFree(Game game)
 {
-    free(game->jeopardyClues);
-    free(game->doubleJeopardyClues);
-    free(game);
+    free(game.jeopardyClues);
+    free(game.doubleJeopardyClues);
 }
 
 void resetDailyDoubles(Game *game)
@@ -83,6 +82,9 @@ void gameReset(Game *game, int *scores)
         clueReset(clue);
     }
     
+		shuffleClues(game->jeopardyClues, game->numJeopardyClues);
+		shuffleClues(game->doubleJeopardyClues, game->numDoubleJeopardyClues);
+		
     clueReset(&game->finalJeopardyClue);
     game->playerInControlIndex = 0;
 		
@@ -103,7 +105,12 @@ Game averageGame()
         djClues[i] = clueMake(value*2, 2, i%5, i/5, 0);
     }
     Clue fjClue = clueMake(0, 3, 0, 0, 0);
-    return gameMake(players, numClues, jClues, numClues, djClues, fjClue, 0);
+    Game game = gameMake(players, numClues, jClues, numClues, djClues, fjClue, 0);
+    game.previousDailyDoubleColumn = -1;
+    addDailyDouble(&game, 1);
+    addDailyDouble(&game, 2);
+    addDailyDouble(&game, 2);
+    return game;
 }
 
 void addDailyDouble(Game *game, int round)
@@ -137,9 +144,9 @@ void addDailyDouble(Game *game, int round)
 		
     for (int i = 0; i<numClues; i++)
     {
-        if (round == 2 && clues[i].column == game->firstDJDDColumn)
+        if (round == 1 || clues[i].column != game->previousDailyDoubleColumn)
         {
-            clueCounts[clues[i].row]--;
+            clueCounts[clues[i].row]++;
         }
     }
     
@@ -246,13 +253,13 @@ int indexOfPlayerWhoRangInFirst(Game *game, Clue *clue)
 	for (int i = 0; i<3; i++)
 	{
 		// Someone has already answered correctly
-		if (clue->answers[i] == 1)
+		if (clue->answers[i] == CORRECT_ANSWER)
 		{
 			return -1;
 		}
 		
 		Player *player = &game->players[i];
-		attemptsToRingIn[i] = clue->answers[i] == -1 && playerAttemptedToRingIn(player, clue); //only attempt to ring in if you haven't already given an answer
+		attemptsToRingIn[i] = clue->answers[i] == NO_ANSWER && playerAttemptedToRingIn(player, clue); //only attempt to ring in if you haven't already given an answer
 		if (attemptsToRingIn[i])
 		{
 			sumBuzzerRatings += player->buzzerRating;
@@ -292,7 +299,7 @@ void simulateClue(Game *game, Clue *clue)
 	{
 		Player *player = &game->players[indexOfPlayerWhoRangIn];
 		clue->answers[indexOfPlayerWhoRangIn] = playerAnsweredClue(player, clue);
-		if (clue->answers[indexOfPlayerWhoRangIn])
+		if (clue->answers[indexOfPlayerWhoRangIn] == CORRECT_ANSWER)
 		{
 			player->score += clue->value;
 			game->playerInControlIndex = indexOfPlayerWhoRangIn;
@@ -307,11 +314,11 @@ void simulateClue(Game *game, Clue *clue)
 
 void simulateDailyDouble(Game *game, Clue *dailyDouble, int moneyLeft)
 {
-    int wager = dailyDoubleWager(&game->players[game->playerInControlIndex], game->players, moneyLeft);
+  int wager = dailyDoubleWager(game->players, game->playerInControlIndex, moneyLeft);
 	Player *player = &game->players[game->playerInControlIndex];
 	dailyDouble->wagers[game->playerInControlIndex] = wager;
 	dailyDouble->answers[game->playerInControlIndex] = playerAnsweredDailyDouble(player, dailyDouble);
-	if (dailyDouble->answers[game->playerInControlIndex])
+	if (dailyDouble->answers[game->playerInControlIndex] == CORRECT_ANSWER)
 	{
 		player->score += wager;
 	}
@@ -323,10 +330,9 @@ void simulateDailyDouble(Game *game, Clue *dailyDouble, int moneyLeft)
 
 void simulateFinalJeopardy(Game *game)
 {
-	int *wagers = finalJeopardyWagers(game->players);
 	for (int i = 0; i<3; i++)
 	{
-		game->finalJeopardyClue.wagers[i] = wagers[i];
+		game->finalJeopardyClue.wagers[i] = finalJeopardyWager(game->players, i);
 	}
 	
 	for (int i = 0; i<3; i++)
@@ -334,7 +340,14 @@ void simulateFinalJeopardy(Game *game)
 		Player *player = &game->players[i];
 		Clue *finalJeopardyClue = &game->finalJeopardyClue;
 		finalJeopardyClue->answers[i] = playerAnsweredFinalJeopardy(player, finalJeopardyClue);
-		player->score += finalJeopardyClue->answers[i] ? finalJeopardyClue->wagers[i] : -finalJeopardyClue->wagers[i];
+		if (finalJeopardyClue->answers[i] == CORRECT_ANSWER)
+		{
+			player->score += finalJeopardyClue->wagers[i];
+		}
+		else
+		{
+			player->score -= finalJeopardyClue->wagers[i];
+		}
 	}
 }
 
@@ -345,7 +358,7 @@ void simulateGame(Game *game)
 		Clue *clue = &game->jeopardyClues[i];
 		if (clue->isDailyDouble)
 		{
-			int remainingMoney = i + 1 == game->numJeopardyClues ? 36000 : 36000 + moneyLeft(&clue[i+1], game->numJeopardyClues - i - 1);
+			int remainingMoney = i + 1 == game->numJeopardyClues ? 36000 : 36000 + moneyLeft(&clue[1], game->numJeopardyClues - i - 1);
 			simulateDailyDouble(game, clue, remainingMoney);
 		}
 		else
@@ -355,16 +368,19 @@ void simulateGame(Game *game)
 	}
 
 	//The player in last place starts off in control of the DJ board
-	int minScore = MIN(game->players[0].score, MIN(game->players[1].score, game->players[2].score));
-	int minPlayerIndex = game->players[0].score == minScore ? 0 : game->players[1].score == minScore ? 1: 2;
-	game->playerInControlIndex = minPlayerIndex;
+	if (game->numDoubleJeopardyClues == 30)
+	{
+		int minScore = MIN(game->players[0].score, MIN(game->players[1].score, game->players[2].score));
+		int minPlayerIndex = game->players[0].score == minScore ? 0 : game->players[1].score == minScore ? 1: 2;
+		game->playerInControlIndex = minPlayerIndex;
+	}
 
 	for (int i = 0; i<game->numDoubleJeopardyClues; i++)
 	{
 		Clue *clue = &game->doubleJeopardyClues[i];
 		if (clue->isDailyDouble)
 		{
-			int remainingMoney = i + 1 == game->numDoubleJeopardyClues ? 0 : moneyLeft(&clue[i+1], game->numDoubleJeopardyClues - i - 1);
+			int remainingMoney = i + 1 == game->numDoubleJeopardyClues ? 0 : moneyLeft(&clue[1], game->numDoubleJeopardyClues - i - 1);
 			simulateDailyDouble(game, clue, remainingMoney);
 		}
 		else
@@ -382,19 +398,16 @@ void simulateGames(Game *game, int trials, int *wins)
 	wins[1] = 0;
 	wins[2] = 0;
 	
-	
-	
 	int scores[3] = {game->players[0].score, game->players[1].score, game->players[2].score};
 	
 	for (int i = 0; i<trials; i++)
 	{
+		gameReset(game, scores);
 		simulateGame(game);
 		int winningIndex = winningPlayerIndex(game);
 		if (winningIndex != -1)
 		{
 			wins[winningIndex] += 1;
 		}
-
-		gameReset(game, scores);
 	}
 }

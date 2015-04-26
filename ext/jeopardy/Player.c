@@ -1,8 +1,8 @@
 //Player.c
 #include <stdlib.h>
-#include "Player.h"
 #include "math.h"
 #include "MinMax.h"
+#include "Player.h"
 
 Player playerMake(int score, double buzzerRating, double confidenceRating, double knowledgeRating, double ddFJRating)
 {
@@ -36,9 +36,9 @@ double oddsPlayerAnsweredClue(Player *player, Clue *clue)
 	return adjustedOdds(rawOdds, player->knowledgeRating);
 }
 
-int playerAnsweredClue(Player *player, Clue *clue)
+ResponseType playerAnsweredClue(Player *player, Clue *clue)
 {
-	return oddsPlayerAnsweredClue(player, clue) >= drand48();
+	return oddsPlayerAnsweredClue(player, clue) >= drand48() ? CORRECT_ANSWER : INCORRECT_ANSWER;
 }
 
 double oddsPlayerAnsweredDailyDouble(Player *player, Clue *clue)
@@ -47,9 +47,9 @@ double oddsPlayerAnsweredDailyDouble(Player *player, Clue *clue)
 	return adjustedOdds(rawOdds, player->ddFJRating);
 }
 
-int playerAnsweredDailyDouble(Player *player, Clue *clue)
+ResponseType playerAnsweredDailyDouble(Player *player, Clue *clue)
 {
-	return oddsPlayerAnsweredDailyDouble(player, clue) >= drand48();
+	return oddsPlayerAnsweredDailyDouble(player, clue) >= drand48() ? CORRECT_ANSWER : INCORRECT_ANSWER;
 }
 
 double oddsPlayerAnsweredFinalJeopardy(Player *player, Clue *clue)
@@ -58,9 +58,9 @@ double oddsPlayerAnsweredFinalJeopardy(Player *player, Clue *clue)
 	return adjustedOdds(rawOdds, player->ddFJRating);
 }
 
-int playerAnsweredFinalJeopardy(Player *player, Clue *clue)
+ResponseType playerAnsweredFinalJeopardy(Player *player, Clue *clue)
 {
-	return oddsPlayerAnsweredFinalJeopardy(player, clue) >= drand48();
+	return oddsPlayerAnsweredFinalJeopardy(player, clue) >= drand48() ? CORRECT_ANSWER : INCORRECT_ANSWER;
 }
 
 double oddsPlayerAttemptedToRingIn(Player *player, Clue *clue)
@@ -74,124 +74,85 @@ int playerAttemptedToRingIn(Player *player, Clue *clue)
 	return oddsPlayerAttemptedToRingIn(player, clue) >= drand48();
 }
 
-int dailyDoubleWager(Player *player, Player *otherPlayers, int moneyLeft)
+void otherPlayersMinMaxScores(Player *players, int playerIndex, int *minScore, int *maxScore)
 {
-    int maxScore = -INFINITY;
-    int minScore = INFINITY;
-    for (int i = 0; i <3; i++)
-    {
-        Player *otherPlayer = &otherPlayers[i];
-        if (otherPlayer != player && maxScore < otherPlayer->score)
-        {
-            maxScore = otherPlayer->score;
-        }
-        if (otherPlayer != player && minScore > otherPlayer->score)
-        {
-            minScore = otherPlayer->score;
-        }
-    }
-    
-	if (player->score > 2 * (moneyLeft + maxScore))
+	*maxScore = -INFINITY;
+	*minScore = INFINITY;
+	for (int i = 0; i <3; i++)
+	{
+		if (i != playerIndex)
+		{
+			*maxScore = MAX(*maxScore, players[i].score);
+			*minScore = MIN(*minScore, players[i].score);
+		}
+	}
+}
+
+int dailyDoubleWager(Player *players, int playerInControlIndex, int moneyLeft)
+{
+	int minScore, maxScore;
+	otherPlayersMinMaxScores(players, playerInControlIndex, &minScore, &maxScore);
+	
+	Player player = players[playerInControlIndex];
+	
+	/* Wager the minimum if the game is already a lock even if the player in second gets every remaining question */
+	if ((moneyLeft + maxScore)*2 < player.score)
 	{
 		return 5;
 	}
-	else if (player->score * 2 < maxScore)
-	{
-		return player->score;
-	}
-	int minMaxWager = moneyLeft >= 36000 ? 1000 : 2000;
 	
-	return MAX(minMaxWager, MIN(2000 + (rand()%50)*100, player->score));
+	/* Wager everything in the first round */
+	if (moneyLeft >= 36000)
+	{	
+		return MAX(1000, player.score);
+	}
+	
+	
+	/* Otherwise, return a random value between 2k and 6k, since that's what your average contestant will do anyways, regardless of the score */
+	return MAX(2000, MIN(2000 + rand()%20*200, players[playerInControlIndex].score));
 }
 
-int *finalJeopardyWagers(Player *players)
+int finalJeopardyWager(Player *players, int playerIndex)
 {
-	int maxScore = MAX(players[0].score, MAX(players[1].score, players[2].score));
-	int minScore = MIN(players[0].score, MIN(players[1].score, players[2].score));
-	int middleScore = NAN;
-	for (int i = 0; i<3; i++)
+	int minScore, maxScore;
+	otherPlayersMinMaxScores(players, playerIndex, &minScore, &maxScore);
+	
+	Player player = players[playerIndex];
+	
+	/* Bet everything but a dollar if we are the only ones playing final jeopardy */
+	if (maxScore <=0)
 	{
-		if (players[i].score != maxScore && players[i].score != minScore)
-		{
-			middleScore = players[i].score;
-		}
+		return player.score-1;
 	}
 	
-	if (isnan(middleScore))
+	/* Bet nothing if we have no money to wager */
+	if (player.score <= 0)
 	{
-		int sumScores = players[0].score + players[1].score + players[2].score;
-		middleScore = maxScore*2 + minScore == sumScores ? maxScore : minScore;
+		return 0;
 	}
 	
-	int maxWager, middleWager, minWager;
-	
-	if (maxScore <= 0)
+	/* First place */
+	if (player.score >= maxScore)
 	{
-		maxWager = 0;
-	}
-	else if (maxScore == middleScore)
-	{
-		maxWager = maxScore;
-	}
-	else if (maxScore > 2*middleScore)
-	{
-		maxWager = maxScore - 2*middleScore - 1;
-	}
-	else if (maxScore == 2*middleScore)
-	{
-		maxWager = 1;
-	}
-	else if (maxScore * 2 == middleScore * 3)
-	{
-		maxWager = maxScore - middleScore;
-	}
-	else
-	{
-		maxWager = 2*middleScore - maxScore + 1;
+		int coverWager = maxScore*2 - player.score + 1;
+		int safeWager = player.score - maxScore*2 - 1;
+		return MIN(player.score, MAX(coverWager, safeWager));
 	}
 	
-	int maxMiss = maxScore - maxWager;
-	
-	if (middleScore <= 0)
+	/* Second place */
+	int firstPlaceIndex = players[0].score == maxScore ? 0 : players[1].score == maxScore ? 1 : 2;
+	int firstWager = finalJeopardyWager(players, firstPlaceIndex);
+	int firstMiss = maxScore - firstWager;
+	if (player.score >= minScore)
 	{
-		middleWager = 0;
-	}
-	else if (maxMiss > 2*middleScore)
-	{
-		middleWager = MAX(0, 2*minScore - middleScore);
-	}
-	else if (maxMiss > middleScore || maxScore == middleScore || middleScore == minScore)
-	{
-		middleWager = middleScore;
-	}
-	else
-	{
-		int target = MAX(maxMiss, minScore*2);
-		middleWager = MIN(target - middleScore + 1, middleScore);
+		int canWin = firstMiss <= 2 * player.score;
+		int coverFirst = canWin && firstMiss > player.score ? player.score : 0;
+		int coverThird = player.score > minScore * 2 ? 0 : canWin ? 2 * minScore - player.score + 1 : 2 * minScore - player.score; /* Go for the outright win if possible, tie for second if not*/
+		return MIN(player.score, MAX(coverFirst, coverThird));
 	}
 	
-	int middleMiss = middleScore - middleWager;
-	if (minScore <= 0)
-	{
-		minWager = 0;
-	}
-	else if (minScore == middleScore)
-	{
-		minWager = middleScore;
-	}
-	else if (minScore > middleMiss && minScore > maxMiss)
-	{
-		minWager = 0;
-	}
-	else
-	{
-		minWager = minScore;
-	}
-	
-	static int wagers[3];
-	for (int i = 0; i<3; i++)
-	{
-		wagers[i] = players[i].score == maxScore ? maxWager : players[i].score == middleScore ? middleWager : minWager;
-	}
-	return wagers;
+	int secondPlaceIndex = 3 - firstPlaceIndex - playerIndex;
+	int secondWager = finalJeopardyWager(players, secondPlaceIndex);
+	int secondMiss = minScore - secondWager;
+	return secondMiss > player.score || firstMiss > player.score ? player.score : 0;
 }

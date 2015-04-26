@@ -8,4 +8,5 @@ extension_name = 'jeopardy'
 # dir_config(extension_name)
 
 # Do the work
+$defs.push('-DRDOC_CAN_PARSE_DOCUMENTATION=0')
 create_makefile(extension_name)

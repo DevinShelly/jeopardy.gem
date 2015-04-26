@@ -30,15 +30,7 @@ Clue clueMake(int value, int round, int row, int column, int isDailyDouble)
 	clue.row = row;
 	clue.column = column;
 	clue.isDailyDouble = isDailyDouble;
-	const int initialValues[3] = {-1, -1, -1};
-	memcpy(clue.answers, initialValues, sizeof(initialValues));
-	memcpy(clue.wagers, initialValues, sizeof(initialValues));
-	
-	if (round == 3)
-	{
-		clue.finalJeopardyOdds = randomFJPercentage();
-	}
-	
+	clueReset(&clue);
 	return clue;
 }
 
@@ -46,8 +38,8 @@ void clueReset(Clue *clue)
 {
     for (int j = 0; j<3; j++)
     {
-        clue->answers[j] = -1;
-        clue->wagers[j] = -1;
+        clue->answers[j] = NO_ANSWER;
+        clue->wagers[j] = NO_WAGER;
     }
     if (clue->round == 3)
     {

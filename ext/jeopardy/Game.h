@@ -11,17 +11,16 @@ typedef struct
 	Clue *jeopardyClues;
 	int numDoubleJeopardyClues;
 	Clue *doubleJeopardyClues;
-	int firstDJDDColumn;
+	int previousDailyDoubleColumn;
 	Clue finalJeopardyClue;
 	int playerInControlIndex;
 } Game;
 
 Game gameMake(Player *players, int numJeopardyClues, Clue *jeopardyClues, int numDoubleJeopardyClues, Clue *doubleJeopardyClues, Clue finalJeopardyClue, int playerInControlIndex);
 Game averageGame();
-void gameFree(Game *game);
+void gameFree(Game game);
 void gameReset(Game *game, int *scores);
 void addDailyDouble(Game *game, int round);
-void simulateGame(Game *game);
 void simulateGames(Game *game, int trials, int *wins);
 void shuffleClues(Clue *clues, int numClues);
 int winningScore(Game *game);

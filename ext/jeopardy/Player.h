@@ -17,18 +17,18 @@ Player playerMake(int score, double buzzerRating, double confidenceRating, doubl
 Player averagePlayer();
 
 double oddsPlayerAnsweredClue(Player *player, Clue *clue);
-int playerAnsweredClue(Player *player, Clue *clue);
+ResponseType playerAnsweredClue(Player *player, Clue *clue);
 
 double oddsPlayerAnsweredDailyDouble(Player *player, Clue *clue);
-int playerAnsweredDailyDouble(Player *player, Clue *clue);
+ResponseType playerAnsweredDailyDouble(Player *player, Clue *clue);
 
 double oddsPlayerAnsweredFinalJeopardy(Player *player, Clue *clue);
-int playerAnsweredFinalJeopardy(Player *player, Clue *clue);
+ResponseType playerAnsweredFinalJeopardy(Player *player, Clue *clue);
 
 double oddsPlayerAttemptedToRingIn(Player *player, Clue *clue);
 int playerAttemptedToRingIn(Player *player, Clue *clue);
 
-int dailyDoubleWager(Player *player, Player *otherPlayers, int moneyLeft);
-int *finalJeopardyWagers(Player *players);
+int dailyDoubleWager(Player *players, int playerInControl, int moneyLeft);
+int finalJeopardyWager(Player *players, int playerIndex);
 
 #endif

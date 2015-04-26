@@ -1,7 +1,16 @@
 //Clue.h
+#include <limits.h>
 
 #ifndef CLUE_H
 #define CLUE_H
+
+typedef enum
+{
+	NO_WAGER = INT_MIN,
+	NO_ANSWER,
+	CORRECT_ANSWER,
+	INCORRECT_ANSWER
+} ResponseType;
 
 typedef struct
 {
