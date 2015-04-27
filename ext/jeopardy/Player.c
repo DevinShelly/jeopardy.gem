@@ -96,7 +96,7 @@ int dailyDoubleWager(Player *players, int playerInControlIndex, int moneyLeft)
 	Player player = players[playerInControlIndex];
 	
 	/* Wager the minimum if the game is already a lock even if the player in second gets every remaining question */
-	if ((moneyLeft + maxScore)*2 < player.score)
+	if ((moneyLeft + maxScore)*2 < player.score && player.score >= 0)
 	{
 		return 5;
 	}
@@ -119,16 +119,16 @@ int finalJeopardyWager(Player *players, int playerIndex)
 	
 	Player player = players[playerIndex];
 	
-	/* Bet everything but a dollar if we are the only ones playing final jeopardy */
-	if (maxScore <=0)
-	{
-		return player.score-1;
-	}
-	
 	/* Bet nothing if we have no money to wager */
 	if (player.score <= 0)
 	{
 		return 0;
+	}
+	
+	/* Bet everything but a dollar if we are the only ones playing final jeopardy */
+	if (maxScore <=0)
+	{
+		return player.score-1;
 	}
 	
 	/* First place */

@@ -58,7 +58,11 @@ module JeopardyTest
       
       g = final_jeopardy_game([10000, 9000, 8000])
       w = final_jeopardy_wagers(g)
-      assert_equal(0, w[2], "Player three failed to stand pat when doing so would win a triple stumper")
+      assert_equal 0, w[2], "Player three failed to stand pat when doing so would win a triple stumper"
+      
+      g = final_jeopardy_game([-2000, 0, 0])
+      w = final_jeopardy_wagers(g)
+      assert_equal 0, w.inject(:+), "Player did not all wager zero when they had zero or negative scores entering FJ"
     end
     
     def test_obvious_things
@@ -74,6 +78,15 @@ module JeopardyTest
 
       g = Jeopardy::Game.new(players: players([-1_000_000, 0, 0]))
       assert_equal 0, g.simulate(trials: trials).values[0], "Player with an absurdly low starting score somehow won a game."
+      
+      g = final_jeopardy_game([-2000, 0, 0])
+      w = g.simulate(trials: 1000).values
+      assert_equal 0, w.inject(:+), "There was a winner returned when all players had zero entering final jeopardy"
+      
+      p = players([0, 0, 0])
+      g = Jeopardy::Game.new(jeopardy_clues: [], double_jeopardy_clues:[Jeopardy::Clue.new(round: 2, double_jeopardy_daily_doubles_left: 1, players: p)])
+      w = g.simulate(trials: 1000).values
+      assert_equal 0, w[1] + w[2], "Players two and three somehow won a game when the final clue of the round was a DD for player one and they both had zero"
     end
     
     def test_daily_doubles

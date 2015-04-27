@@ -192,12 +192,12 @@ void addDailyDouble(Game *game, int round)
 
 void shuffleClues(Clue *clues, int numClues)
 {
-    for (int i = numClues-1; i>0; i--)
+    for (int i = numClues; i>0; i--)
     {
-        Clue lastClue = clues[i];
+        Clue lastClue = clues[i-1];
         int randomIndex = rand()%i;
         Clue randomClue = clues[randomIndex];
-        clues[i] = randomClue;
+        clues[i-1] = randomClue;
         clues[randomIndex] = lastClue;
     }
 }
