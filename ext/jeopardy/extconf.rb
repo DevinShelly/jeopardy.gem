@@ -2,11 +2,8 @@
 require 'mkmf'
 
 # Give it a name
-extension_name = 'jeopardy'
+extension_name = 'jeopardy/jeopardy'
 
-# The destination
-# dir_config(extension_name)
+$CFLAGS += " -std=c99"
 
-# Do the work
-$defs.push('-DRDOC_CAN_PARSE_DOCUMENTATION=0')
 create_makefile(extension_name)

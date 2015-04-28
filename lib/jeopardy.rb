@@ -235,4 +235,4 @@ module Jeopardy
   end
 end
 
-require "jeopardy/jeopardy"
+require_relative "jeopardy/jeopardy"
