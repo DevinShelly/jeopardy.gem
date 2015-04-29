@@ -163,7 +163,7 @@ void addDailyDouble(Game *game, int round)
         weightedOdds[i] /= sumWeightedOdds;
     }
     
-    double dailyDoubleRandomizer = drand48();
+    double dailyDoubleRandomizer = drand();
     double totalOdds = 0.0;
     
     
@@ -227,7 +227,7 @@ int winningPlayerIndex(Game *game)
 	
 	double randomIncrement = 1.0/numWinners;
 	double currentValue = 0.0;
-	double randomValue = drand48();
+	double randomValue = drand();
 	
 	for (int i = 0; i<3; i++)
 	{
@@ -266,7 +266,7 @@ int indexOfPlayerWhoRangInFirst(Game *game, Clue *clue)
 		}
 	}
 	
-	double ringInRandomizer = drand48();
+	double ringInRandomizer = drand();
 	double oddsOfRingingIn = 0.0;
 	for (int i = 0; i<3; i++)
 	{

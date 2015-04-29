@@ -3,14 +3,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include "ruby.h"
+#include "MinMax.h"
 
 double sampleNormal()
 {
     double u, v, r;
     do
     {
-        u = drand48() * 2.0 - 1.0;
-        v = drand48() * 2.0 - 1.0;
+        u = drand() * 2.0 - 1.0;
+        v = drand() * 2.0 - 1.0;
         r = u * u + v * v;
     } while (r == 0.0 || r > 1.0);
     double c = sqrt(-2.0 * log(r) / r);

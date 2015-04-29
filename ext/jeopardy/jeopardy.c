@@ -34,7 +34,6 @@ static Clue *c_clues(VALUE rb_clues)
 		VALUE rb_clue = rb_ary_aref(1, &iV, rb_clues);
 		clues[i] = c_clue(rb_clue);
 	}
-	
 	return clues;
 }
 
@@ -69,7 +68,6 @@ static Player *c_players(VALUE rb_players)
 		VALUE rb_player = rb_ary_aref(1, &iV, rb_players);
 		players[i] = c_player(rb_player);
 	}
-	
 	return players; 
 }
 
@@ -90,6 +88,7 @@ static Game c_game(VALUE rb_game)
 	g.finalJeopardyClue = clueMake(0, 3, 0, 0, 0);
 	g.playerInControlIndex = 0;
 	VALUE previous_daily_double_column = rb_funcall(rb_game, rb_intern("previous_daily_double_column"), 0);
+	
 	if (TYPE(previous_daily_double_column) != T_FIXNUM && TYPE(previous_daily_double_column) != T_NIL)
 	{
 		rb_raise(rb_eTypeError, "Previous daily double column must either be a FIXNUM or NIL");
@@ -103,7 +102,6 @@ static Game c_game(VALUE rb_game)
 	{
 		addDailyDouble(&g, 1);
 	}
-	
 	VALUE double_jeopardy_daily_doubles_left = rb_funcall(rb_game, rb_intern("double_jeopardy_daily_doubles_left"), 0);
 	Check_Type(double_jeopardy_daily_doubles_left, T_FIXNUM);
 	for (int i = 0; i<NUM2INT(double_jeopardy_daily_doubles_left); i++)
@@ -216,8 +214,10 @@ static VALUE simulate(int argc, VALUE *argv, VALUE self)
 	srand48(NUM2INT(seed));
 	
 	Game game = c_game(self);
+	
 	int wins[3] = {0, 0, 0};
 	simulateGames(&game, NUM2INT(trials), wins);
+	
 	sync_game(self, game);
 	gameFree(game);
 	VALUE wins_hash = rb_hash_new();

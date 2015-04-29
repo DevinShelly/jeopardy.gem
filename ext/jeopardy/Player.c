@@ -38,7 +38,7 @@ double oddsPlayerAnsweredClue(Player *player, Clue *clue)
 
 ResponseType playerAnsweredClue(Player *player, Clue *clue)
 {
-	return oddsPlayerAnsweredClue(player, clue) >= drand48() ? CORRECT_ANSWER : INCORRECT_ANSWER;
+	return oddsPlayerAnsweredClue(player, clue) >= drand() ? CORRECT_ANSWER : INCORRECT_ANSWER;
 }
 
 double oddsPlayerAnsweredDailyDouble(Player *player, Clue *clue)
@@ -49,7 +49,7 @@ double oddsPlayerAnsweredDailyDouble(Player *player, Clue *clue)
 
 ResponseType playerAnsweredDailyDouble(Player *player, Clue *clue)
 {
-	return oddsPlayerAnsweredDailyDouble(player, clue) >= drand48() ? CORRECT_ANSWER : INCORRECT_ANSWER;
+	return oddsPlayerAnsweredDailyDouble(player, clue) >= drand() ? CORRECT_ANSWER : INCORRECT_ANSWER;
 }
 
 double oddsPlayerAnsweredFinalJeopardy(Player *player, Clue *clue)
@@ -60,7 +60,7 @@ double oddsPlayerAnsweredFinalJeopardy(Player *player, Clue *clue)
 
 ResponseType playerAnsweredFinalJeopardy(Player *player, Clue *clue)
 {
-	return oddsPlayerAnsweredFinalJeopardy(player, clue) >= drand48() ? CORRECT_ANSWER : INCORRECT_ANSWER;
+	return oddsPlayerAnsweredFinalJeopardy(player, clue) >= drand() ? CORRECT_ANSWER : INCORRECT_ANSWER;
 }
 
 double oddsPlayerAttemptedToRingIn(Player *player, Clue *clue)
@@ -71,7 +71,7 @@ double oddsPlayerAttemptedToRingIn(Player *player, Clue *clue)
 
 int playerAttemptedToRingIn(Player *player, Clue *clue)
 {
-	return oddsPlayerAttemptedToRingIn(player, clue) >= drand48();
+	return oddsPlayerAttemptedToRingIn(player, clue) >= drand();
 }
 
 void otherPlayersMinMaxScores(Player *players, int playerIndex, int *minScore, int *maxScore)
