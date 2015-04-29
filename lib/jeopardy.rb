@@ -185,7 +185,7 @@ module Jeopardy
     # [<tt>Jeopardy::Player.new.odds_of_answering_daily_double(Jeopardy::Clue.new)</tt>] #=>	0.76
     #
     
-    def odds_of_answering_daily_double(daily_double)
+    def daily_double_odds(daily_double)
       #empty, just used a placeholder for documentation
       #actual implementation is in jeopardy.c
     end 
@@ -198,7 +198,19 @@ module Jeopardy
     # [<tt>Jeopardy::Player.new.odds_of_answering_clue(Jeopardy::Clue.new)</tt>] #=>	0.9316826244
     #
     
-    def odds_of_answering_clue(clue)
+    def clue_odds(clue)
+      #empty, just used a placeholder for documentation
+      #actual implementation is in jeopardy.c
+    end
+    
+    ##
+    # Return the decimal odds of the Player answering final jeopardy correctly.
+    #
+    # *Usage*
+    #
+    # [<tt>Jeopardy::Player.new.final_jeopardy_odds(Jeopardy::Clue.new)</tt>] #=>	0.9316826244
+    #
+    def final_jeopardy_odds()
       #empty, just used a placeholder for documentation
       #actual implementation is in jeopardy.c
     end

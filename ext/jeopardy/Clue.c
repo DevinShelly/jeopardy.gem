@@ -19,11 +19,6 @@ double sampleNormal()
     return u * c;
 }
 
-double randomFJPercentage()
-{
-	return sampleNormal()*0.22 + 0.4924242424;
-}
-
 Clue clueMake(int value, int round, int row, int column, int isDailyDouble)
 {
 	Clue clue;
@@ -45,7 +40,7 @@ void clueReset(Clue *clue)
     }
     if (clue->round == 3)
     {
-        clue->finalJeopardyOdds = randomFJPercentage();
+        clue->finalJeopardyStandardDeviations = sampleNormal();
     }
 }
 
@@ -95,6 +90,10 @@ double rawOddsOfRingingIn(Clue *clue)
     }
   };
 	return odds[clue->round - 1][previousAnswerers(clue)][clue->row];
-	
+}
+
+double rawOddsOfAnsweringFinalJeopardy(Clue *finalJeopardy)
+{
+	return finalJeopardy->finalJeopardyStandardDeviations*0.22 + 0.4924242424;
 }
 

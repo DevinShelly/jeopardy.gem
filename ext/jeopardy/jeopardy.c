@@ -46,10 +46,10 @@ static Player c_player(VALUE rb_player)
 	
 	Player player;
 	player.score = NUM2INT(rb_funcall(rb_player, rb_intern("score"), 0));
-	player.buzzerRating = NUM2INT(rb_funcall(rb_player, rb_intern("buzzer_rating"), 0));
-	player.confidenceRating = NUM2INT(rb_funcall(rb_player, rb_intern("confidence_rating"), 0));
-	player.knowledgeRating = NUM2INT(rb_funcall(rb_player, rb_intern("knowledge_rating"), 0));
-	player.ddFJRating = NUM2INT(rb_funcall(rb_player, rb_intern("dd_fj_rating"), 0));
+	player.buzzerRating = NUM2DBL(rb_funcall(rb_player, rb_intern("buzzer_rating"), 0));
+	player.confidenceRating = NUM2DBL(rb_funcall(rb_player, rb_intern("confidence_rating"), 0));
+	player.knowledgeRating = NUM2DBL(rb_funcall(rb_player, rb_intern("knowledge_rating"), 0));
+	player.ddFJRating = NUM2DBL(rb_funcall(rb_player, rb_intern("dd_fj_rating"), 0));
 	return player;
 }
 
@@ -233,7 +233,7 @@ static VALUE simulate(int argc, VALUE *argv, VALUE self)
 	return wins_hash;
 }
 
-static VALUE odds_of_answering_daily_double(VALUE self, VALUE rb_clue)
+static VALUE daily_double_odds(VALUE self, VALUE rb_clue)
 {
 	Player player = c_player(self);
 	Clue clue = c_clue(rb_clue);
@@ -241,11 +241,19 @@ static VALUE odds_of_answering_daily_double(VALUE self, VALUE rb_clue)
 	return DBL2NUM(oddsPlayerAnsweredDailyDouble(&player, &clue));
 }
 
-static VALUE odds_of_answering_clue(VALUE self, VALUE rb_clue)
+static VALUE clue_odds(VALUE self, VALUE rb_clue)
 {
 	Player player = c_player(self);
 	Clue clue = c_clue(rb_clue);
 	return DBL2NUM(oddsPlayerAnsweredClue(&player, &clue));
+}
+
+static VALUE final_jeopardy_odds(VALUE self)
+{
+	Player player = c_player(self);
+	Clue finalJeopardy;
+	finalJeopardy.finalJeopardyStandardDeviations = 0.0;
+	return DBL2NUM(oddsPlayerAnsweredFinalJeopardy(&player, &finalJeopardy));
 }
 
 void Init_jeopardy()	
@@ -262,6 +270,7 @@ void Init_jeopardy()
 	rbClue = rb_const_get(Jeopardy, rb_intern("Clue"));
 	rbPlayer = rb_const_get(Jeopardy, rb_intern("Player"));
 	rb_define_method(rbGame, "simulate", simulate, -1);
-	rb_define_method(rbPlayer, "odds_of_answering_daily_double", odds_of_answering_daily_double, 1);
-	rb_define_method(rbPlayer, "odds_of_answering_clue", odds_of_answering_clue, 1);
+	rb_define_method(rbPlayer, "daily_double_odds", daily_double_odds, 1);
+	rb_define_method(rbPlayer, "clue_odds", clue_odds, 1);
+	rb_define_method(rbPlayer, "final_jeopardy_odds", final_jeopardy_odds, 0);
 }

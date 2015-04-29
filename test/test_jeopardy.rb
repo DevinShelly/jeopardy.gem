@@ -12,9 +12,9 @@ module JeopardyTest
       return players
     end
     
-    def final_jeopardy_game(scores)
+    def final_jeopardy_game(scores, sim_once = true)
       g = Jeopardy::Game.new(jeopardy_clues: [], double_jeopardy_clues: [], players: players(scores))
-      g.simulate
+      g.simulate if sim_once
       return g
     end
     
@@ -63,6 +63,22 @@ module JeopardyTest
       g = final_jeopardy_game([-2000, 0, 0])
       w = final_jeopardy_wagers(g)
       assert_equal 0, w.inject(:+), "Player did not all wager zero when they had zero or negative scores entering FJ"
+      
+      g = final_jeopardy_game([18000, 12000, 0])
+      w = final_jeopardy_wagers(g)
+      assert_equal 6000, w[0], "Player failed to wager for the tie in an exact 2/3rds situation"
+      assert_equal 0, w[1], "Player failed to wager zero in an exact 2/3rds situation"
+      
+      g = final_jeopardy_game([18001, 12000, 0])
+      w = final_jeopardy_wagers(g)
+      assert_equal 6000, w[0], "Player failed to wager for the win"
+      assert_equal 12000, w[1], "Player failed to wager everything in a force situation"
+      
+      g = final_jeopardy_game([23999, 12000, 0])
+      w = final_jeopardy_wagers(g)
+      assert_equal 2, w[0], "Player failed to wager for the win"
+      assert_equal 12000, w[1], "Player failed to wager everything in a force situation"
+      
     end
     
     def test_obvious_things
@@ -112,6 +128,37 @@ module JeopardyTest
       g.simulate
       assert_equal 1, g.daily_doubles[0].column, "The second Daily Double was placed in the same column as the first"
     end
-  
+    
+    def test_player_ratings
+      g = Jeopardy::Game.new(double_jeopardy_daily_doubles_left: 0, jeopardy_daily_doubles_left: 0)
+      g.players[0].buzzer_rating = 0
+      g.players[1].buzzer_rating = 0
+      g.players[2].confidence_rating = 1
+      g.players[2].knowledge_rating = 1
+      g.players[2].dd_fj_rating = 1
+      g.simulate
+      c = g.coryats
+      assert_equal 54_000, c.values[2], "Player with perfect ratings against two players with zero buzzer ratings did not have a perfect coryat"
+
+      g = Jeopardy::Game.new(double_jeopardy_daily_doubles_left: 0, jeopardy_daily_doubles_left: 0)
+      g.players[0].buzzer_rating = 0
+      g.players[1].confidence_rating = 1
+      g.players[1].knowledge_rating = 1
+      g.simulate
+      p0_answered = (g.jeopardy_clues + g.double_jeopardy_clues).select {|clue| !clue.answers[g.players[0]].nil?}
+      assert_equal 0, p0_answered.count, "Player with a zero buzzer rating managed to ring in against a player with a perfect confidence and knowledge rating"
+
+      g = final_jeopardy_game([5001, 5000, 0], false)
+      g.players[0].dd_fj_rating = 1.0
+      assert_equal 1.0, g.players[0].final_jeopardy_odds, "FJ odds did not equal 0.0 for a player with a -1.0 dd_fj_rating"
+      w = g.simulate(trials: 1000)
+      assert_equal 1000, w.values[0], "Player with the best possible FJ rating lost a game when needing to get it right #{g.final_jeopardy_clue}"
+      
+      g = final_jeopardy_game([5001, 5000, 0], false)
+      g.players[0].dd_fj_rating = -1.0
+      assert_equal 0.0, g.players[0].final_jeopardy_odds, "FJ odds did not equal 0.0 for a player with a -1.0 dd_fj_rating"
+      w = g.simulate(trials: 1000)
+      assert_equal 0, w.values[0], "Player with the worst possible FJ rating won a game when needing to get it right #{g.final_jeopardy_clue}"
+    end
   end
 end

@@ -1,6 +1,6 @@
-Gem::Specification.new "jeopardy", "0.0.20" do |s|
+Gem::Specification.new "jeopardy", "0.0.26" do |s|
   s.name        = 'jeopardy'
-  s.version     = '0.0.20'
+  s.version     = '0.0.26'
   s.date        = '2015-04-29'
   s.summary     = "Jeopardy Game Simulator"
   s.description = "A fast Monte Carlo simulation of the television game show Jeopardy!"

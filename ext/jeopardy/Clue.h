@@ -19,7 +19,7 @@ typedef struct
 	int row;
 	int column;
 	int isDailyDouble;
-	double finalJeopardyOdds;
+	double finalJeopardyStandardDeviations;
 	int answers[3];
 	int wagers[3];
 } Clue;
@@ -29,6 +29,7 @@ Clue clueMake(int value, int round, int row, int column, int isDailyDouble);
 double rawOddsOfAnsweringClue(Clue *clue);
 double rawOddsOfAnsweringDailyDouble(Clue *clue);
 double rawOddsOfRingingIn(Clue *clue);
+double rawOddsOfAnsweringFinalJeopardy(Clue *finalJeopardy);
 void clueReset(Clue *clue);
 double randomFJPercentage();
 #endif

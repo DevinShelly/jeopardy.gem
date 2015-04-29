@@ -26,8 +26,7 @@ double adjustedOdds(double odds, double rating)
 	{
 		return odds + (1.0-odds) * rating;
 	}
-	
-	return odds - odds*rating;
+	return odds + odds*rating;
 }
 
 double oddsPlayerAnsweredClue(Player *player, Clue *clue)
@@ -54,7 +53,7 @@ ResponseType playerAnsweredDailyDouble(Player *player, Clue *clue)
 
 double oddsPlayerAnsweredFinalJeopardy(Player *player, Clue *clue)
 {
-	double rawOdds = clue->finalJeopardyOdds;
+	double rawOdds = rawOddsOfAnsweringFinalJeopardy(clue);
 	return adjustedOdds(rawOdds, player->ddFJRating);
 }
 
@@ -134,7 +133,7 @@ int finalJeopardyWager(Player *players, int playerIndex)
 	/* First place */
 	if (player.score >= maxScore)
 	{
-		int coverWager = maxScore*2 - player.score + 1;
+		int coverWager = player.score*2 == 3*maxScore ? maxScore*2 - player.score : maxScore*2 - player.score + 1;
 		int safeWager = player.score - maxScore*2 - 1;
 		return MIN(player.score, MAX(coverWager, safeWager));
 	}
